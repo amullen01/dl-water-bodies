@@ -7,9 +7,7 @@ This python code handles lake and pond detection in PlanetScope imagery. To run 
 ### example usage
 ```python Predictor.py --image_dir='path_to_input_images' --output_dir='path_to_output_predictions' --model_file='path_to_h5_model_file' --slope_model=True --slope_file='path_to_slope_file'```
 
-running just ```python Predictor.py``` without any arguments will run with the example image and output to examples/data/predictions. The default arguments expect the model file(s) to be placed in a directory with the local path res/
-
-The prediction_example.ipynb notebook allows for visualization of the example image and predicted water body mask.
+The prediction_example.ipynb notebook allows for visualization of an example image and predicted water body mask.
 
 ### input requirements
 There are two model files that can be used with the predictor, "single_class_best_model.h5" and "single_class_slope_best_model.h5". Both models expect 4-band (RGBNIR) PlanetScope imagery in geotiff format. The "single_class_slope_best_model.h5" model also needs a slope angle geotiff that overlaps spatially with the imagery. The slope file does not need to be provided in the same crs or resolution as the PlanetScope imagery, but should have a native resolution of ~30 m.
