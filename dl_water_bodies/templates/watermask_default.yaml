@@ -1,0 +1,66 @@
+experiment_name: dl-watermask
+experiment_type: unet_pred
+
+data_dir: /home/${oc.env:USER}/.dl-watermask/data
+model_dir: /home/${oc.env:USER}/.dl-watermask/model
+inference_save_dir: /home/${oc.env:USER}/.dl-watermask/outputs
+
+seed: 42
+gpu_devices: 0,1,2,3
+mixed_precision: True
+xla: False
+
+input_bands:
+  - Blue
+  - Green
+  - Red
+  - NIR1
+
+output_bands:
+  - Blue
+  - Green
+  - Red
+  - NIR1
+
+substract_labels: False
+normalize: 10000.0
+
+expand_dims: True
+tile_size: 256
+include_classes: True
+augment: True
+
+batch_size: 32
+n_classes: 1
+test_size: 0.20
+learning_rate: 0.0001
+max_epochs: 6000
+patience: 10
+
+model: "tfc.unet.unet_batchnorm(nclass=1, input_size=(256, 256, 4),maps=[64, 128, 256, 512, 1024])"
+loss: 'tf.keras.losses.BinaryCrossentropy()'
+optimizer: tf.keras.optimizers.Adam
+
+metrics:
+  - 'tf.keras.metrics.BinaryAccuracy(threshold=0.5)'
+  - 'tf.keras.metrics.Recall()'
+  - 'tf.keras.metrics.Precision()'
+  - 'sm.metrics.iou_score'
+
+callbacks:
+  - "tf.keras.callbacks.ModelCheckpoint(save_best_only=True, mode='min', monitor='val_loss', filepath='${model_dir}/${experiment_name}{epoch:02d}-{val_loss:.2f}.hdf5')"
+  - "tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=4)"
+  - "tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=False)"
+  - "tf.keras.callbacks.TerminateOnNaN()"
+
+window_size: 10000
+pred_batch_size: 128
+inference_overlap: 0.50
+inference_treshold: 0.50
+probability_map: False
+
+model_filename: /explore/nobackup/people/almullen/smallsat/code/dl-water-bodies/res/single_class_best_model.h5
+
+inference_regex_list:
+  - '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_20231026_composite.tif'
+  - '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_20231025_composite.tif'
