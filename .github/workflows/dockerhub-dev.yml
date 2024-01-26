@@ -42,4 +42,4 @@ jobs:
           context: .
           file: ./requirements/Dockerfile.dev
           push: true
-          tags: nasanccs/vhr-cloudmask:dev
+          tags: amullen01/dl-water-bodies:dev
