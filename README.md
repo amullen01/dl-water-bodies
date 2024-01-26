@@ -104,7 +104,7 @@ This file has the subset of images we are testing with: /explore/nobackup/people
 For inference of the tiles:
 
 ```bash
-singularity exec --nv --env PYTHONPATH="$NOBACKUP/development/dl-water-bodies" -B $NOBACKUP,/explore/nobackup/people,/explore/nobackup/projects /explore/nobackup/projects/ilab/containers/vhr-cloudmask.sif python /explore/nobackup/people/jacaraba/development/dl-water-bodies/dl_water_bodies/view/dlwater_pipeline_cli.py -o '/explore/nobackup/projects/ilab/test/dlwater-test' -r '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_202207*_composite.tif' -m '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet_masks/YKD/Ch009v024/Ch009v024_202207*_composite_udm2.tif' -s predict
+singularity exec --nv --env PYTHONPATH="$NOBACKUP/development/dl-water-bodies" -B $NOBACKUP,/explore/nobackup/people,/explore/nobackup/projects /explore/nobackup/projects/ilab/containers/vhr-cloudmask.sif python /explore/nobackup/people/jacaraba/development/dl-water-bodies/dl_water_bodies/view/dlwater_pipeline_cli.py -o '/explore/nobackup/projects/ilab/test/dlwater-test' -r '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_202207*_composite.tif' -mr '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet_masks/YKD/Ch009v024/Ch009v024_202207*_composite_udm2.tif' -s predict
 ```
 
 ## Predictor.py
