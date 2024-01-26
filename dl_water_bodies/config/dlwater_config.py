@@ -149,8 +149,15 @@ class WaterMaskConfig:
     # String regex to find rasters to predict
     inference_regex: Optional[str] = "*.tif"
 
+    # String regex to find rasters to mask predictions
+    mask_regex: Optional[str] = "*.tif"
+
     # List regex to find rasters to predict (multiple locations)
     inference_regex_list: Optional[List[str]] = field(
+        default_factory=lambda: [])
+
+    # List regex to find rasters to mask predictions (multiple locations)
+    mask_regex_list: Optional[List[str]] = field(
         default_factory=lambda: [])
 
     # Window size for sliding window operations

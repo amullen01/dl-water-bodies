@@ -97,6 +97,16 @@ Latest test:
 singularity exec --nv --env PYTHONPATH="$NOBACKUP/development/dl-water-bodies" -B $NOBACKUP,/explore/nobackup/people,/explore/nobackup/projects /explore/nobackup/projects/ilab/containers/vhr-cloudmask.sif python /explore/nobackup/people/jacaraba/development/dl-water-bodies/dl_water_bodies/view/dlwater_pipeline_cli.py -o '/explore/nobackup/projects/ilab/test/dlwater-test' -r '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_20210715_composite.tif' -s predict
 ```
 
+## Benchmark between versions
+
+This file has the subset of images we are testing with: /explore/nobackup/people/cssprad1/projects/planet_water/code/feature-composite-refactor/test_subset_202207.csv. The regex to cover these files is: /explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_202207*_composite.tif.
+
+For inference of the tiles:
+
+```bash
+singularity exec --nv --env PYTHONPATH="$NOBACKUP/development/dl-water-bodies" -B $NOBACKUP,/explore/nobackup/people,/explore/nobackup/projects /explore/nobackup/projects/ilab/containers/vhr-cloudmask.sif python /explore/nobackup/people/jacaraba/development/dl-water-bodies/dl_water_bodies/view/dlwater_pipeline_cli.py -o '/explore/nobackup/projects/ilab/test/dlwater-test' -r '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet/YKD/Ch009v024/Ch009v024_202207*_composite.tif' -m '/explore/nobackup/people/almullen/smallsat_augmentation/data/planet_masks/YKD/Ch009v024/Ch009v024_202207*_composite_udm2.tif' -s predict
+```
+
 ## Predictor.py
 
 This python code handles lake and pond detection in PlanetScope imagery. To run the predictor you will first need to download the .h5 model files from https://doi.org/10.5281/zenodo.7682754. The script is setup to run on a directory of PlanetScope images and output predictions to another directory.

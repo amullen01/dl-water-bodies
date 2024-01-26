@@ -67,6 +67,15 @@ def main():
                         help='Inference regex list',
                         default=['*.tif'])
 
+    parser.add_argument('-mr',
+                        '--mask-regex-list',
+                        type=str,
+                        nargs='*',
+                        required=False,
+                        dest='mask_regex_list',
+                        help='Mask regex list',
+                        default=['*.tif'])
+
     parser.add_argument('-f',
                         '--force-delete',
                         default=False,
@@ -87,6 +96,7 @@ def main():
         args.model_filename,
         args.output_dir,
         args.inference_regex_list,
+        args.mask_regex_list,
         args.force_delete
     )
 

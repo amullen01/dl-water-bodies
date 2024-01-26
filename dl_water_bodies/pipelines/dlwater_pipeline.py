@@ -16,7 +16,9 @@ from omegaconf import OmegaConf
 from multiprocessing import Pool, cpu_count
 from omegaconf.listconfig import ListConfig
 
-from tensorflow_caney.model.config.cnn_config import Config
+# from tensorflow_caney.model.config.cnn_config import Config
+from dl_water_bodies.config.dlwater_config \
+    import WaterMaskConfig as Config
 from tensorflow_caney.utils.system import seed_everything, \
     set_gpu_strategy, set_mixed_precision, set_xla, array_module
 from tensorflow_caney.utils.data import read_dataset_csv, \
@@ -61,6 +63,7 @@ class WaterMaskPipeline(object):
                 model_filename: str = None,
                 output_dir: str = None,
                 inference_regex_list: str = None,
+                mask_regex_list: str = None,
                 force_delete: bool = False,
                 default_config: str = 'templates/watermask_default.yaml',
                 logger=None
@@ -96,6 +99,10 @@ class WaterMaskPipeline(object):
         # rewrite inference regex list
         if inference_regex_list is not None:
             self.conf.inference_regex_list = inference_regex_list
+
+        # rewrite mask regex list
+        if mask_regex_list is not None:
+            self.conf.mask_regex_list = mask_regex_list
 
         # Set Data CSV
         self.data_csv = data_csv
@@ -212,13 +219,23 @@ class WaterMaskPipeline(object):
 
         # Gather filenames to predict
         if len(self.conf.inference_regex_list) > 0:
-            data_filenames = self.get_filenames(self.conf.inference_regex_list)
+            data_filenames = sorted(
+                self.get_filenames(self.conf.inference_regex_list))
         else:
-            data_filenames = self.get_filenames(self.conf.inference_regex)
+            data_filenames = sorted(
+                self.get_filenames(self.conf.inference_regex))
         logging.info(f'{len(data_filenames)} files to predict')
 
+        # Gather filenames to mask predictions
+        if len(self.conf.mask_regex_list) > 0:
+            mask_filenames = sorted(
+                self.get_filenames(self.conf.mask_regex_list))
+        else:
+            mask_filenames = sorted(self.get_filenames(self.conf.mask_regex))
+        logging.info(f'{len(mask_filenames)} masks for prediction')
+
         # iterate files, create lock file to avoid predicting the same file
-        for filename in sorted(data_filenames):
+        for filename, mask_filename in zip(data_filenames, mask_filenames):
 
             # start timer
             start_time = time.time()
@@ -252,9 +269,13 @@ class WaterMaskPipeline(object):
                 # create lock file
                 open(lock_filename, 'w').close()
 
-                # open filename
+                # open data filename
                 image = rxr.open_rasterio(filename)
                 logging.info(f'Prediction shape: {image.shape}')
+
+                # open mask filename
+                mask = rxr.open_rasterio(mask_filename)
+                logging.info(f'Mask shape: {mask.shape}')
 
                 # check bands in imagery, do not proceed if one band
                 if image.shape[0] == 1:
@@ -273,7 +294,6 @@ class WaterMaskPipeline(object):
 
             # scale image values, PlanetScope specific normalization
             image = (image / 10000.0) * 255
-
             temporary_tif = preprocess_input(image.values)
 
             # Sliding window prediction
@@ -293,6 +313,19 @@ class WaterMaskPipeline(object):
                     window=self.conf.window_algorithm,
                     probability_map=self.conf.probability_map
                 )
+
+            # Set nodata values on mask
+            # Planet imagery does not have the burned no-data.
+            # The default is 0 which we are adding here.
+            nodata = 0  # prediction.rio.nodata
+
+            # Mask out using the Planet quota
+            mask = np.squeeze(mask[0, :, :].values)
+            prediction[mask == 0] = nodata
+
+            # TODO: Fix no-data from corners to 255
+            # nodata_mask = np.squeeze(image[:, :, 0].values)
+            # prediction[nodata_mask == 0] = np.nan#255
 
             # Drop image band to allow for a merge of mask
             image = image.drop(
@@ -314,23 +347,12 @@ class WaterMaskPipeline(object):
             prediction.attrs['model_name'] = (self.conf.model_filename)
             prediction = prediction.transpose("band", "y", "x")
 
-            # Set nodata values on mask
-            # Planet imagery does not have the burned no-data.
-            # The default is 0 which we are adding here.
-            nodata = 0  # prediction.rio.nodata
-
-            print('The prediction no-data', nodata)
-            print('Before the where', np.unique(prediction.values))
-
+            # do not need this if it comes from numpy
             prediction = prediction.where(image != nodata)
-            print('After the where', np.unique(prediction.values))
-            print(f"nodata: {prediction.rio.nodata}")
-            print(f"encoded_nodata: {prediction.rio.encoded_nodata}")
 
-            prediction.rio.write_nodata(
-                self.conf.prediction_nodata, encoded=True, inplace=True)
-            print(f"nodata: {prediction.rio.nodata}")
-            print(f"encoded_nodata: {prediction.rio.encoded_nodata}")
+            # prediction.rio.write_nodata(
+            #    self.conf.prediction_nodata, encoded=True, inplace=True)
+            prediction.rio.write_nodata(nodata, encoded=True, inplace=True)
 
             # Save output raster file to disk
             prediction.rio.to_raster(
