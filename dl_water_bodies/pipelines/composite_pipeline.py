@@ -18,13 +18,16 @@ from dl_water_bodies.utils.gs_utils import write_geotiff
 class Composite(object):
 
     def __init__(self, input_dataframe_path: str,
-                 output_dir: str, month: str, logger: logging.Logger) -> None:
+                 output_dir: str, month: str, nodata: int = 0,
+                 logger: logging.Logger = None) -> None:
 
         self._dataframe = pd.read_csv(input_dataframe_path)
 
         self._output_dir = output_dir
 
-        self._month = month 
+        self._month = month
+
+        self._nodata = nodata
 
         self._image_paths = self._dataframe['associated_image'].to_list()
         self._prediction_paths = self._dataframe['prediction_name'].to_list()
@@ -43,6 +46,9 @@ class Composite(object):
         sum_water, num_predictions, water_prob = self.get_prediction_stack(
             min_x, max_x, min_y, max_y)
 
+        np.save('nb_sum_water.npy', sum_water)
+        np.save('nb_num_preds.npy', num_predictions)
+
         gt = [min_x, 3.125, 0, max_y, 0, -3.125]
         projection = osr.SpatialReference()
         projection.ImportFromEPSG(32606)
@@ -50,7 +56,7 @@ class Composite(object):
 
         waterprob_path = os.path.join(self._output_dir,
                                       f'{self._month}prob_composite.tif')
-        
+
         self._logger.info(f'Writing water prob to: {waterprob_path}')
 
         write_geotiff(
@@ -202,7 +208,8 @@ class Composite(object):
                 num_predictions = np.zeros(pred_data.shape) 
 
             sum_water, num_predictions = self.composite_kernel(
-                i, image_data, pred_data, sum_water, num_predictions)
+                i, image_data, pred_data, sum_water, num_predictions,
+                nodata=self._nodata)
 
     
         return sum_water, num_predictions, sum_water/num_predictions

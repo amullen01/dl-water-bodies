@@ -27,6 +27,11 @@ def main():
                         default='.',
                         help='Path to output directory')
 
+    parser.add_argument('-nodata',
+                        default=0,
+                        type=int,
+                        help='nodata value')
+
     args = parser.parse_args()
 
     fmt = '[%(asctime)s %(name)s] ' + \
@@ -47,6 +52,7 @@ def main():
     compositePipeline = Composite(input_dataframe_path=args.df,
                                   output_dir=args.o,
                                   month=month,
+                                  nodata=args.nodata,
                                   logger=logger)
     
     compositePipeline.build_composites()
