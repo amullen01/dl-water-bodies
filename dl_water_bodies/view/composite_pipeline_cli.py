@@ -17,15 +17,35 @@ def main():
 
     parser = argparse.ArgumentParser(description=desc)
 
-    parser.add_argument('-df',
+    parser.add_argument('-prediction_dir',
                         required=True,
                         type=str,
-                        help='Path to the dataframe containing' +
-                            ' image and prediction paths')
+                        help='Path to image predictions')
+    
+    parser.add_argument('-mask_dir',
+                        required=True,
+                        type=str,
+                        help='Path to image predictions')
+    
+    parser.add_argument('-years',
+                        required=True,
+                        type=int,
+                        nargs='*',
+                        help='years to composite')
+    
+    parser.add_argument('-months',
+                        required=True,
+                        type=int,
+                        nargs='*',
+                        help='months to composite')
 
     parser.add_argument('-o',
                         default='.',
                         help='Path to output directory')
+    
+    parser.add_argument('-n',
+                        default='composite',
+                        help='composite name')
 
     parser.add_argument('-nodata',
                         default=0,
@@ -45,13 +65,12 @@ def main():
     ch.setFormatter(logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S'))
     logger.addHandler(ch)
 
-    month = os.path.basename(args.df).split('_composite_list.csv')[0]
-
-    logger.info(f'Month/identifier: {month}')
-
-    compositePipeline = Composite(input_dataframe_path=args.df,
+    compositePipeline = Composite(prediction_dir=args.prediction_dir,
+                                  mask_dir=args.mask_dir,
+                                  years=args.years,
+                                  months=args.months,
                                   output_dir=args.o,
-                                  month=month,
+                                  composite_name= args.n,
                                   nodata=args.nodata,
                                   logger=logger)
     
