@@ -4,15 +4,13 @@ import logging
 import argparse
 from dl_water_bodies.pipelines.dlwater_pipeline import WaterMaskPipeline
 
-
 # -----------------------------------------------------------------------------
 # main
 #
 # python dlwater_pipeline_cli.py -c config.yaml -d config.csv -s preprocess
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------      
 def main():
 
-    # Process command-line args.
     desc = 'Use this application to perform CNN segmentation.'
     parser = argparse.ArgumentParser(description=desc)
 
@@ -23,14 +21,6 @@ def main():
                         default=None,
                         dest='config_file',
                         help='Path to the configuration file')
-
-    parser.add_argument('-d',
-                        '--data-csv',
-                        type=str,
-                        required=False,
-                        default=None,
-                        dest='data_csv',
-                        help='Path to the data configuration file')
 
     parser.add_argument('-s',
                         '--step',
@@ -59,21 +49,21 @@ def main():
                         help='Path to output directory')
 
     parser.add_argument('-r',
-                        '--regex-list',
+                        '--image-dir',
                         type=str,
                         nargs='*',
                         required=False,
-                        dest='inference_regex_list',
-                        help='Inference regex list',
+                        dest='image_dir',
+                        help='directory with images to predict',
                         default=['*.tif'])
 
     parser.add_argument('-mr',
-                        '--mask-regex-list',
+                        '--mask-dir',
                         type=str,
                         nargs='*',
                         required=False,
-                        dest='mask_regex_list',
-                        help='Mask regex list',
+                        dest='mask_dir',
+                        help='directory with corresponding image masks',
                         default=['*.tif'])
 
     parser.add_argument('-f',
@@ -83,7 +73,6 @@ def main():
                         dest='force_delete',
                         action='store_true',
                         help='Force the deletion of lock files')
-
     args = parser.parse_args()
 
     # Setup timer to monitor script execution time
@@ -92,11 +81,10 @@ def main():
     # Initialize pipeline object
     pipeline = WaterMaskPipeline(
         args.config_file,
-        args.data_csv,
         args.model_filename,
         args.output_dir,
-        args.inference_regex_list,
-        args.mask_regex_list,
+        args.image_dir,
+        args.mask_dir,
         args.force_delete
     )
 
@@ -108,7 +96,7 @@ def main():
     if "predict" in args.pipeline_step:
         pipeline.predict()
 
-    logging.info(f'Took {(time.time()-timer)/60.0:.2f} min.')
+    logging.info('Took {} min.'.format((time.time()-timer)/60.0))
 
     return
 

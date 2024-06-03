@@ -4,7 +4,7 @@ import logging
 import sys
 import os
 
-from dl_water_bodies.pipelines.composite_pipeline import Composite
+from dl_water_bodies.pipelines.composite_pipeline_v2 import Composite
 
 # -----------------------------------------------------------------------------
 # main
@@ -74,7 +74,7 @@ def main():
                                   nodata=args.nodata,
                                   logger=logger)
     
-    compositePipeline.build_composites()
+    compositePipeline.composite_image_group()
 
 
 # -----------------------------------------------------------------------------
